@@ -5,7 +5,6 @@ import com.example.DonorMicroservices.customizedException.UserNotFoundException;
 import com.example.DonorMicroservices.entity.Donor;
 import com.example.DonorMicroservices.enums.Status;
 import com.example.DonorMicroservices.helper.MapperHelper;
-import com.example.DonorMicroservices.proxy.DonateProxy;
 import com.example.DonorMicroservices.proxy.DonorProxy;
 import com.example.DonorMicroservices.repository.DonorRepo;
 import com.example.DonorMicroservices.service.DonorService;
@@ -29,6 +28,16 @@ public class DonorServiceImpl implements DonorService {
     @Autowired
     private DonorRepo donorRepo ;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Override
+    public boolean validate(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
+        String s = authorization.split("Bearer ")[1];
+        String URL="http://localhost:8082/auth/validate";
+        return Boolean.TRUE.equals(restTemplate.postForObject(URL, s, Boolean.class));
+    }
 
     @Override
     public String saveDonor(DonorProxy donorProxy) {
@@ -37,29 +46,29 @@ public class DonorServiceImpl implements DonorService {
         donorRepo.save(donor);
         return "Donor saved successfully";
     }
-    @Override
-    public String donateBlood(DonateProxy donateProxy) {
-        Optional<Donor> byId = donorRepo.findById(donateProxy.getDonorId());
-        System.out.println(byId.get().getDonorId());
-        if (byId.isEmpty()) {
-            throw new DonorNotFoundException("Donor not found with this donor Id :" + donationRequestProxy.getDonorId(), HttpStatus.NOT_FOUND.value());
-        }
-
-        Donor donor = byId.get();
-
-        Donation donation = mapperHelper.proxyToEntityDonation(donationRequestProxy);
-
-        donation.setDonor(donor);
-        donation.setBloodGroup(donor.getBloodGroup());
-        donation.setLastUpdated(LocalDateTime.now());
-        donation.setStatus(StatusEnum.PENDING);
-        donation.setAge(donationRequestProxy.getAge());
-
-        donationRepo.save(donation);
-
-
-        return "Donation request submitted. Waiting for admin approval.";
-    }
+//    @Override
+//    public String donateBlood(DonationRequestProxy donationRequestProxy) {
+//        Optional<Donor> byId = donorRepo.findById(donationRequestProxy.getDonorId());
+//        System.out.println(byId.get().getDonorId());
+//        if (byId.isEmpty()) {
+//            throw new DonorNotFoundException("Donor not found with this donor Id :" + donationRequestProxy.getDonorId(), HttpStatus.NOT_FOUND.value());
+//        }
+//
+//        Donor donor = byId.get();
+//
+//        Donation donation = mapperHelper.proxyToEntityDonation(donationRequestProxy);
+//
+//        donation.setDonor(donor);
+//        donation.setBloodGroup(donor.getBloodGroup());
+//        donation.setLastUpdated(LocalDateTime.now());
+//        donation.setStatus(StatusEnum.PENDING);
+//        donation.setAge(donationRequestProxy.getAge());
+//
+//        donationRepo.save(donation);
+//
+//
+//        return "Donation request submitted. Waiting for admin approval.";
+//    }
 //
 //    @Override
 //    public String donateBlood(DonationRequestDto donation, HttpServletRequest req) {

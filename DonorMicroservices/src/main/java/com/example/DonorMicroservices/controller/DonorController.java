@@ -22,6 +22,11 @@ public class DonorController {
     @Autowired
     private RestTemplate restTemplate;
 
+    @GetMapping("/validate")
+    public Boolean validate(HttpServletRequest req){
+        return donorService.validate(req);
+    }
+
     @PostMapping("/save-donor")
     public ResponseEntity<String> saveDonor(@RequestBody DonorProxy donorProxy) {
         return new ResponseEntity<>(donorService.saveDonor(donorProxy), HttpStatus.CREATED);

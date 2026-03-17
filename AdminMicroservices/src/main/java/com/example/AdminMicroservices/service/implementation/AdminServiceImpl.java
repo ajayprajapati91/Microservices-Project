@@ -11,6 +11,7 @@ import com.example.AdminMicroservices.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +25,10 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     private BloodStockRepo bloodStockRepo;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
 
 //    @Override
 //    public String checkDonorEligibility(Long id) {

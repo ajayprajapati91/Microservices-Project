@@ -9,7 +9,8 @@ import java.util.List;
 public interface DonorService {
 
     String saveDonor(DonorProxy donorProxy);
-    String donateBlood(DonateProxy donateProxy, HttpServletRequest req);
+//    String donateBlood(DonateProxy donateProxy, HttpServletRequest req);
+    boolean validate(HttpServletRequest request);
 
     DonorProxy getDonor(Long donorId);
 
