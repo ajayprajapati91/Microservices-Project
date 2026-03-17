@@ -1,0 +1,33 @@
+#spring:
+#  cloud:
+#    gateway:
+#      server:
+#        webmvc:
+#          routes:
+#            -id: AdminMicroservices
+#             uri:lb://ADMINMICROSERVICES
+#             predicates:
+#               -Path=/admin/**
+#             filters:
+#               -StripPrefix=1
+#
+#             -id: AuthMicroservices
+#               uri:lb://AUTHMICROSERVICES
+#               predicates:
+#                 -Path=/auth/**
+#               filters:
+#                 -StripPrefix=1
+#
+#               -id: DonorMicroservices
+#                 uri:lb://DONORMICROSERVICES
+#                 predicates:
+#                   -Path=/donor/**
+#                 filters:
+#                   -StripPrefix=1
+#
+#                 -id: HospitalMicroservices
+#                   uri:lb://HOSPITALMICROSERVICES
+#                   predicates:
+#                     -Path=/hospital/**
+#                   filters:
+#                     -StripPrefix=1
