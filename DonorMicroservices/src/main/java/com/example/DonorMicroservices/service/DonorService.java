@@ -8,13 +8,13 @@ import java.util.List;
 
 public interface DonorService {
 
-    String saveDonor(DonorProxy donorProxy);
-//    String donateBlood(DonateProxy donateProxy, HttpServletRequest req);
-    boolean validate(HttpServletRequest request);
+    String saveDonor(DonorProxy donorProxy,HttpServletRequest req);
+    String donateBlood(DonateProxy donateProxy, HttpServletRequest req);
+    Boolean validate(HttpServletRequest request);
 
-    DonorProxy getDonor(Long donorId);
+    DonorProxy getDonor(Long donorId,HttpServletRequest req);
 
-    DonorProxy updateCurrentDonorProfile(Long donorId, DonorProxy donorProxy);
+    DonorProxy updateCurrentDonorProfile(Long donorId, DonorProxy donorProxy,HttpServletRequest req);
 //    DonorResponseDto donorDetails(Long id,HttpServletRequest req);
 //
 //    List<DonationResponseDto> donorHistory(Long id,HttpServletRequest req);

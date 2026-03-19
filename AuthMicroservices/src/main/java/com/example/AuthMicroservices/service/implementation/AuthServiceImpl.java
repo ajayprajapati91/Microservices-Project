@@ -107,11 +107,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Boolean verifyToken(AuthResp token) {
-        try{ String token1 = token.getToken();
-            String username = jwtUtil.extractUsername(token1);
+    public Boolean verifyToken(String token) {
+        try{
+            String username = jwtUtil.extractUsername(token);
             UserDetails userDetails = myUserDetailsService.loadUserByUsername(username);
-            return jwtUtil.validateToken(token1,userDetails);
+            return jwtUtil.validateToken(token,userDetails);
         }catch (Exception e){
             return false;
         }

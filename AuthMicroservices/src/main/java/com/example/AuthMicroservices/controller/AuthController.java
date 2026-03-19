@@ -45,8 +45,8 @@ public class AuthController {
         return new ResponseEntity<>(authService.verifyOtp(req),HttpStatus.OK);
     }
 
-    @GetMapping("/verifyToken")
-    public ResponseEntity<Boolean>  verifyToken(@RequestBody AuthResp token){
+    @PostMapping("/verifyToken")
+    public ResponseEntity<Boolean>  verifyToken(@RequestBody String token){
         return new ResponseEntity<>(authService.verifyToken(token),HttpStatus.OK);
     }
 }

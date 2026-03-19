@@ -18,11 +18,12 @@ public class AdminController {
     @Autowired
     private AdminService adminService;
 
-//    @GetMapping("/donor/approve/{id}")
-//    public String registerUser(@PathVariable Long id)
-//    {
-//        return adminService.checkDonorEligibility(id);
-//    }
+    @GetMapping("/donor/approve/{id}")
+    public String registerUser(@PathVariable Long id,HttpServletRequest req)
+    {
+        return adminService.checkDonorEligibility(id,req);
+    }
+
 //    @PostMapping("/blood-stock/add")
 //    public ResponseEntity<String> addBloodStock(@Valid @RequestBody BloodStockRequestDto dto)
 //    {
@@ -82,13 +83,13 @@ public class AdminController {
 //    }
 
     @GetMapping("/get-byBloodGroup/{bloodGroup}")
-    public ResponseEntity<BloodStockProxy> getBloodStockByBloodGroup(@PathVariable BloodGroup bloodGroup) {
-        return new ResponseEntity<>(adminService.getStockByBloodGroup(bloodGroup), HttpStatus.OK);
+    public ResponseEntity<BloodStockProxy> getBloodStockByBloodGroup(@PathVariable BloodGroup bloodGroup,HttpServletRequest req) {
+        return new ResponseEntity<>(adminService.getStockByBloodGroup(bloodGroup,req), HttpStatus.OK);
     }
 
     @GetMapping("/get-allBloodStock")
-    public ResponseEntity<List<BloodStockProxy>> getAllBloodStock() {
-        return new ResponseEntity<>(adminService.getAllBloodStock(), HttpStatus.OK);
+    public ResponseEntity<List<BloodStockProxy>> getAllBloodStock(HttpServletRequest req) {
+        return new ResponseEntity<>(adminService.getAllBloodStock(req), HttpStatus.OK);
     }
 
 }

@@ -8,6 +8,9 @@ import com.example.AdminMicroservices.helper.MapperHelper;
 import com.example.AdminMicroservices.proxy.BloodStockProxy;
 import com.example.AdminMicroservices.repository.BloodStockRepo;
 import com.example.AdminMicroservices.service.AdminService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,21 +32,37 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     private RestTemplate restTemplate;
 
+    private Logger logger = LoggerFactory.getLogger(AdminServiceImpl.class);
 
-//    @Override
-//    public String checkDonorEligibility(Long id) {
-//        Optional<Donor> byId = donorRepo.findById(id);
-//        if(byId.isEmpty()) throw new NoUserFoundException("No Donor found ", HttpStatus.NOT_FOUND.value());
-//        Donor donor = byId.get();
-//        double bmi = donor.getWeight() / (donor.getHeight() * donor.getHeight());
-//        if(bmi>18)
-//            donor.setStatus("Approved");
-//        else {
-//            donor.setStatus("Rejected");
-//        }
-//        donorRepo.save(donor);
-//        return "Donor eligibility checked";
-//    }
+    @Override
+    public Boolean validate(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
+        String s = authorization.split("Bearer ")[1];
+        String URL="http://localhost:8082/auth/verifyToken";
+        return Boolean.TRUE.equals(restTemplate.postForObject(URL, s, Boolean.class));
+    }
+
+
+    @Override
+    public String checkDonorEligibility(Long id,HttpServletRequest req) {
+        if (validate(req)){
+            String forObject = restTemplate.getForObject("http://localhost:5050/gateway/donor/donate-blood", String.class);
+            logger.
+            Optional<Donor> byId = donorRepo.findById(id);
+            if(byId.isEmpty()) throw new NoUserFoundException("No Donor found ", HttpStatus.NOT_FOUND.value());
+            Donor donor = byId.get();
+            double bmi = donor.getWeight() / (donor.getHeight() * donor.getHeight());
+            if(bmi>18)
+                donor.setStatus("Approved");
+            else {
+                donor.setStatus("Rejected");
+            }
+            donorRepo.save(donor);
+            return "Donor eligibility checked";
+        }
+        throw new RuntimeException("Unauthorize access");
+
+    }
 
 //    @Override
 //    public List<UserResponseDto> getAllUsers() {
@@ -102,35 +121,44 @@ public class AdminServiceImpl implements AdminService {
 //    }
 
     @Override
-    public String updateBloodStock(BloodGroup bloodGroup, BloodStockProxy bloodStockProxy) {
+    public String updateBloodStock(BloodGroup bloodGroup, BloodStockProxy bloodStockProxy,HttpServletRequest req) {
+       if (validate(req)){
+           BloodStock existingStock = bloodStockRepo.findByBloodGroup(bloodGroup)
+                   .orElseThrow(() -> new RuntimeException("Blood stock not found for blood group " + bloodGroup));
 
-        BloodStock existingStock = bloodStockRepo.findByBloodGroup(bloodGroup)
-                .orElseThrow(() -> new RuntimeException("Blood stock not found for blood group " + bloodGroup));
+           Integer newUnits = existingStock.getUnitsAvailable() + bloodStockProxy.getUnitsAvailable();
 
-        Integer newUnits = existingStock.getUnitsAvailable() + bloodStockProxy.getUnitsAvailable();
+           existingStock.setUnitsAvailable(newUnits);
+           existingStock.setLastUpdated(LocalDateTime.now());
 
-        existingStock.setUnitsAvailable(newUnits);
-        existingStock.setLastUpdated(LocalDateTime.now());
+           bloodStockRepo.save(existingStock);
 
-        bloodStockRepo.save(existingStock);
+           return "Blood stock updated successfully for blood group " + bloodGroup;
+       }
+        throw new BloodStockNotFoundException("Unauthorize access",HttpStatus.NOT_FOUND.value());
+       }
 
-        return "Blood stock updated successfully for blood group " + bloodGroup;
-    }
 
     @Override
-    public BloodStockProxy getStockByBloodGroup(BloodGroup bloodGroup) {
-        Optional<BloodStock> byBloodGroup = bloodStockRepo.findByBloodGroup(bloodGroup);
+    public BloodStockProxy getStockByBloodGroup(BloodGroup bloodGroup,HttpServletRequest req) {
+        if (validate(req)){
+            Optional<BloodStock> byBloodGroup = bloodStockRepo.findByBloodGroup(bloodGroup);
 
-        if(byBloodGroup.isEmpty()){
-            throw new BloodStockNotFoundException("Blood stock not found for blood group " + bloodGroup,HttpStatus.NOT_FOUND.value());
+            if(byBloodGroup.isEmpty()){
+                throw new BloodStockNotFoundException("Blood stock not found for blood group " + bloodGroup,HttpStatus.NOT_FOUND.value());
+            }
+            return mapperHelper.entityToProxyBloodStock(byBloodGroup.get());
         }
-        return mapperHelper.entityToProxyBloodStock(byBloodGroup.get());
+        throw new BloodStockNotFoundException("Unauthorize access",HttpStatus.NOT_FOUND.value());
     }
 
     @Override
-    public List<BloodStockProxy> getAllBloodStock() {
-        List<BloodStock> bloodStockList = bloodStockRepo.findAll();
-        return bloodStockList.stream().map(b->mapperHelper.entityToProxyBloodStock(b)).toList();
+    public List<BloodStockProxy> getAllBloodStock(HttpServletRequest req) {
+        if (validate(req)){
+            List<BloodStock> bloodStockList = bloodStockRepo.findAll();
+            return bloodStockList.stream().map(b->mapperHelper.entityToProxyBloodStock(b)).toList();
+        }
+        throw new BloodStockNotFoundException("Unauthorize access",HttpStatus.NOT_FOUND.value());
     }
 
     @Override

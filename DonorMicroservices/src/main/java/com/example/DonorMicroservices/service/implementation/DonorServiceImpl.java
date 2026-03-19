@@ -5,6 +5,7 @@ import com.example.DonorMicroservices.customizedException.UserNotFoundException;
 import com.example.DonorMicroservices.entity.Donor;
 import com.example.DonorMicroservices.enums.Status;
 import com.example.DonorMicroservices.helper.MapperHelper;
+import com.example.DonorMicroservices.proxy.DonateProxy;
 import com.example.DonorMicroservices.proxy.DonorProxy;
 import com.example.DonorMicroservices.repository.DonorRepo;
 import com.example.DonorMicroservices.service.DonorService;
@@ -32,115 +33,105 @@ public class DonorServiceImpl implements DonorService {
     private RestTemplate restTemplate;
 
     @Override
-    public boolean validate(HttpServletRequest request) {
+    public Boolean validate(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
         String s = authorization.split("Bearer ")[1];
-        String URL="http://localhost:8082/auth/validate";
+        String URL="http://localhost:8082/auth/verifyToken";
         return Boolean.TRUE.equals(restTemplate.postForObject(URL, s, Boolean.class));
     }
 
     @Override
-    public String saveDonor(DonorProxy donorProxy) {
-        Donor donor = mapperHelper.proxyToEntityDonor(donorProxy);
-        donor.setStatus(Status.PENDING);
-        donorRepo.save(donor);
-        return "Donor saved successfully";
-    }
-//    @Override
-//    public String donateBlood(DonationRequestProxy donationRequestProxy) {
-//        Optional<Donor> byId = donorRepo.findById(donationRequestProxy.getDonorId());
-//        System.out.println(byId.get().getDonorId());
-//        if (byId.isEmpty()) {
-//            throw new DonorNotFoundException("Donor not found with this donor Id :" + donationRequestProxy.getDonorId(), HttpStatus.NOT_FOUND.value());
-//        }
-//
-//        Donor donor = byId.get();
-//
-//        Donation donation = mapperHelper.proxyToEntityDonation(donationRequestProxy);
-//
-//        donation.setDonor(donor);
-//        donation.setBloodGroup(donor.getBloodGroup());
-//        donation.setLastUpdated(LocalDateTime.now());
-//        donation.setStatus(StatusEnum.PENDING);
-//        donation.setAge(donationRequestProxy.getAge());
-//
-//        donationRepo.save(donation);
-//
-//
-//        return "Donation request submitted. Waiting for admin approval.";
-//    }
-//
-//    @Override
-//    public String donateBlood(DonationRequestDto donation, HttpServletRequest req) {
-//        String authToken = req.getHeader("Authorization");
-//        String token = authToken.substring(7);
-//        String username = jwtUtil.extractUsername(token);
-//        Optional<Users> byUsername = userRepo.findByUsername(username);
-//        Users users = byUsername.get();
-//        Long id = users.getId();
-//
-//        Optional<Donor> byId = donorRepo.findByUserId(id);
-//        if (byId.isEmpty()) {
-//            throw new NoUserFoundException("Donor not Found",HttpStatus.NOT_FOUND.value());
-//        }
-//        System.out.println("BYID"+byId.get().getName());
-//        System.out.println("token name : "+username);
-//        if(!username.equals(byId.get().getUser().getUsername()))
-//        {
-//            throw new NoUserFoundException("Donor does not match with logged in donor",HttpStatus.NOT_FOUND.value());
-//        }
-//        Donation donation1 = mapper.dtoToEntityDonation(donation);
-//        Donor donor =byId.get();
-//        if(donor.getStatus().equals("Approved"))
-//        {
-//
-//            donor.setLastDonationDate(LocalDate.now());
-//            donorRepo.save(donor);
-//
-//            donation1.setDonationDate(LocalDate.now());
-//            donation1.setBloodGroup(donor.getBloodGroup());
-//            donation1.setDonor(donor);
-//            donationRepository.save(donation1);
-//
-//            BloodStock stock = bloodStockRepository.findByBloodGroup(donor.getBloodGroup()).orElse(new BloodStock());
-//            stock.setLastUpdated(LocalDateTime.now());
-//            stock.setBloodGroup(donor.getBloodGroup());
-//            stock.setUnits(stock.getUnits() + donation.getQuantity());
-//
-//            bloodStockRepository.save(stock);
-//            return "Thank you "+donor.getName()+" for donating blood";
-//        }
-//        else
-//        {
-//            return donor.getName()+" Not eligible to donate blood ";
-//        }
-//        return "";
-//    }
-//
-    @Override
-    public DonorProxy getDonor(Long donorId) {
-        Optional<Donor> byId = donorRepo.findById(donorId);
-        if (byId.isEmpty()){
-            throw new DonorNotFoundException("Donor not found with this id :"+donorId,HttpStatus.NOT_FOUND.value());
+    public String saveDonor(DonorProxy donorProxy,HttpServletRequest req) {
+        if (validate(req)){
+            Donor donor = mapperHelper.proxyToEntityDonor(donorProxy);
+            donor.setStatus(Status.PENDING);
+            donorRepo.save(donor);
+            return "Donor saved successfully";
         }
-        Donor donor = byId.get();
-        return mapperHelper.entityToProxyDonor(donor);
+        throw new DonorNotFoundException("Unauthorize access",HttpStatus.NOT_FOUND.value());
     }
 
     @Override
-    public DonorProxy updateCurrentDonorProfile(Long donorId, DonorProxy donorProxy) {
-        Optional<Donor> byId = donorRepo.findById(donorId);
-        if (byId.isEmpty()){
-            throw new DonorNotFoundException("Donor not found with this id :"+donorId,HttpStatus.NOT_FOUND.value());
+    public String donateBlood(DonateProxy donateProxy, HttpServletRequest req) {
+        if (validate(req)){
+            Optional<Users> byUsername = userRepo.findByUsername(username);
+            Users users = byUsername.get();
+            Long id = users.getId();
+
+            Optional<Donor> byId = donorRepo.findByUserId(id);
+            if (byId.isEmpty()) {
+                throw new NoUserFoundException("Donor not Found",HttpStatus.NOT_FOUND.value());
+            }
+            System.out.println("BYID"+byId.get().getName());
+            System.out.println("token name : "+username);
+            if(!username.equals(byId.get().getUser().getUsername()))
+            {
+                throw new NoUserFoundException("Donor does not match with logged in donor",HttpStatus.NOT_FOUND.value());
+            }
+            Donation donation1 = mapper.dtoToEntityDonation(donation);
+            Donor donor =byId.get();
+            if(donor.getStatus().equals("Approved"))
+            {
+
+                donor.setLastDonationDate(LocalDate.now());
+                donorRepo.save(donor);
+
+                donation1.setDonationDate(LocalDate.now());
+                donation1.setBloodGroup(donor.getBloodGroup());
+                donation1.setDonor(donor);
+                donationRepository.save(donation1);
+
+                BloodStock stock = bloodStockRepository.findByBloodGroup(donor.getBloodGroup()).orElse(new BloodStock());
+                stock.setLastUpdated(LocalDateTime.now());
+                stock.setBloodGroup(donor.getBloodGroup());
+                stock.setUnits(stock.getUnits() + donation.getQuantity());
+
+                bloodStockRepository.save(stock);
+                return "Thank you "+donor.getName()+" for donating blood";
+            }
+            else
+            {
+                return donor.getName()+" Not eligible to donate blood ";
+            }
         }
-        Donor donor = byId.get();
-        donor.setAge(donorProxy.getAge());
-        donor.setCity(donorProxy.getCity());
-        donor.setGender(donorProxy.getGender());
-        donor.setBloodGroup(donorProxy.getBloodGroup());
-        donor.setHeight(donorProxy.getHeight());
-        donor.setName(donorProxy.getName());
-        donor.setWeight(donorProxy.getWeight());
+        throw new DonorNotFoundException("Unauthorize access",HttpStatus.NOT_FOUND.value());
+    }
+
+    @Override
+    public DonorProxy getDonor(Long donorId,HttpServletRequest req) {
+        if(validate(req))
+        {
+            Optional<Donor> byId = donorRepo.findById(donorId);
+            if (byId.isEmpty()){
+                throw new DonorNotFoundException("Donor not found with this id :"+donorId,HttpStatus.NOT_FOUND.value());
+            }
+            Donor donor = byId.get();
+            return mapperHelper.entityToProxyDonor(donor);
+        }
+        throw new DonorNotFoundException("Unauthorize access",HttpStatus.NOT_FOUND.value());
+
+    }
+
+    @Override
+    public DonorProxy updateCurrentDonorProfile(Long donorId, DonorProxy donorProxy,HttpServletRequest req) {
+        if (validate(req)) {
+            Optional<Donor> byId = donorRepo.findById(donorId);
+            if (byId.isEmpty()) {
+                throw new DonorNotFoundException("Donor not found with this id :" + donorId, HttpStatus.NOT_FOUND.value());
+            }
+            Donor donor = byId.get();
+            donor.setAge(donorProxy.getAge());
+            donor.setCity(donorProxy.getCity());
+            donor.setGender(donorProxy.getGender());
+            donor.setBloodGroup(donorProxy.getBloodGroup());
+            donor.setHeight(donorProxy.getHeight());
+            donor.setName(donorProxy.getName());
+            donor.setWeight(donorProxy.getWeight());
+            return mapperHelper.entityToProxyDonor(donorRepo.save(donor));
+        }
+        throw new DonorNotFoundException("Unauthorize access", HttpStatus.NOT_FOUND.value());
+    }
+
 //
 //        Users users = donor.getUsers();
 //        users.setName(donorRequestProxy.getUsers().getName());
@@ -152,8 +143,8 @@ public class DonorServiceImpl implements DonorService {
 //        users.setPassword(donorRequestProxy.getUsers().getPassword());
 
 //        donor.setUsers(users);
-        return mapperHelper.entityToProxyDonor(donorRepo.save(donor));
-    }
+
+
 //
 //    @Override
 //    public DonorResponseDto donorDetails(Long id, HttpServletRequest req) {

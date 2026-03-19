@@ -28,18 +28,18 @@ public class DonorController {
     }
 
     @PostMapping("/save-donor")
-    public ResponseEntity<String> saveDonor(@RequestBody DonorProxy donorProxy) {
-        return new ResponseEntity<>(donorService.saveDonor(donorProxy), HttpStatus.CREATED);
+    public ResponseEntity<String> saveDonor(@RequestBody DonorProxy donorProxy,HttpServletRequest req) {
+        return new ResponseEntity<>(donorService.saveDonor(donorProxy,req), HttpStatus.CREATED);
     }
 
     @GetMapping("/get-donor/{donorId}")
-    public ResponseEntity<DonorProxy> getDonor( @PathVariable Long donorId){
-        return new ResponseEntity<>(donorService.getDonor(donorId),HttpStatus.OK);
+    public ResponseEntity<DonorProxy> getDonor( @PathVariable Long donorId,HttpServletRequest req){
+        return new ResponseEntity<>(donorService.getDonor(donorId,req),HttpStatus.OK);
     }
 
     @PutMapping("/update-donorProfile/{donorId}")
-    public ResponseEntity<DonorProxy> update(@PathVariable Long donorId, @RequestBody DonorProxy donorProxy){
-        return new ResponseEntity<>(donorService.updateCurrentDonorProfile(donorId, donorProxy),HttpStatus.OK);
+    public ResponseEntity<DonorProxy> update(@PathVariable Long donorId, @RequestBody DonorProxy donorProxy,HttpServletRequest req){
+        return new ResponseEntity<>(donorService.updateCurrentDonorProfile(donorId, donorProxy,req),HttpStatus.OK);
     }
 
 //    @GetMapping("/history/{id}")
@@ -48,10 +48,10 @@ public class DonorController {
 //        return new ResponseEntity<>(donorService.donorHistory(id,req),HttpStatus.OK);
 //    }
 
-//    @PostMapping("/donate-blood")
-//    public ResponseEntity<String> donateBlood(@RequestBody DonationRequestProxy donationRequestProxy){
-//        return new ResponseEntity<>(donorService.donateBlood(donationRequestProxy),HttpStatus.OK);
-//    }
+    @PostMapping("/donate-blood")
+    public ResponseEntity<String> donateBlood(@RequestBody DonationRequestProxy donationRequestProxy,HttpServletRequest req){
+        return new ResponseEntity<>(donorService.donateBlood(donationRequestProxy,req),HttpStatus.OK);
+    }
 //@GetMapping("/profile/{id}")
 //public ResponseEntity<DonorResponseDto> donorProfile(@PathVariable Long id, HttpServletRequest req)
 //{

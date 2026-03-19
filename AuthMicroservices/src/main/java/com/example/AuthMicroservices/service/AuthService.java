@@ -15,6 +15,6 @@ public interface AuthService {
 
     String verifyOtp(VerifyOtpRequest verifyOtpRequest);
 
-     Boolean verifyToken(AuthResp token);
+     Boolean verifyToken(String token);
 
 }

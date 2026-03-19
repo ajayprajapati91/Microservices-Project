@@ -4,7 +4,8 @@ import com.example.HospitalMicroservices.proxy.HospitalProxy;
 import jakarta.servlet.http.HttpServletRequest;
 
 public interface HospitalService {
-    HospitalProxy registerHospital(HospitalProxy hospitalProxy);
+    Boolean validate(HttpServletRequest request);
+    HospitalProxy registerHospital(HospitalProxy hospitalProxy, HttpServletRequest req);
 
 //    String requestBlood(BloodRequestRequestDto dto, HttpServletRequest req);
 //    HospitalResponseDto getHospital(Long id, HttpServletRequest req);

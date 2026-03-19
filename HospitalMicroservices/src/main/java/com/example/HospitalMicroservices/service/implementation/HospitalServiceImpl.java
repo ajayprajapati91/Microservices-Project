@@ -11,6 +11,7 @@ import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -29,20 +30,34 @@ public class HospitalServiceImpl implements HospitalService {
 
 //    @Autowired
 //    private BloodRequestRepo bloodRequestRepo;
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Override
-    public HospitalProxy registerHospital(HospitalProxy hospitalProxy) {
+    public Boolean validate(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
+        String s = authorization.split("Bearer ")[1];
+        String URL="http://localhost:8082/auth/verifyToken";
+        return Boolean.TRUE.equals(restTemplate.postForObject(URL, s, Boolean.class));
+    }
+
+    @Override
+    public HospitalProxy registerHospital(HospitalProxy hospitalProxy,HttpServletRequest req) {
+        if (validate(req)){
+            Hospital hospital = mapperHelper.proxyToEntityHospital(hospitalProxy);
+//        hospital.setUsers(users);
+            Hospital save = hospitalRepo.save(hospital);
+
+            return mapperHelper.entityToProxyHospital(save);
+        }
+        throw new HospitalNotFoundException("Unauthorize access",HttpStatus.NOT_FOUND.value());
 //        Optional<Users> byId = usersRepo.findById(hospitalProxy.getUserId());
 //        if (byId.isEmpty()){
 //            throw new UserNotFoundException("user not found", HttpStatus.NOT_FOUND.value());
 //        }
 //        Users users = byId.get();
 
-        Hospital hospital = mapperHelper.proxyToEntityHospital(hospitalProxy);
-//        hospital.setUsers(users);
-        Hospital save = hospitalRepo.save(hospital);
 
-        return mapperHelper.entityToProxyHospital(save);
     }
 
 //    @Override
