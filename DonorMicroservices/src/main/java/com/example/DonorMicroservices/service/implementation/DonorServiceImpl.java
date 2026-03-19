@@ -34,9 +34,18 @@ public class DonorServiceImpl implements DonorService {
     @Override
     public boolean validate(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
+        if(authorization==null || !authorization.startsWith("Bearer ")){
+            return false;
+        }
         String s = authorization.split("Bearer ")[1];
-        String URL="http://localhost:8082/auth/validate";
-        return Boolean.TRUE.equals(restTemplate.postForObject(URL, s, Boolean.class));
+        String URL="http://localhost:8082/auth/verifyToken";
+        try {
+            return Boolean.TRUE.equals(restTemplate.postForObject(URL, s, Boolean.class));
+        }catch (Exception e){
+            return false;
+        }
+
+
     }
 
     @Override
